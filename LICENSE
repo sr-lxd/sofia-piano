@@ -15,6 +15,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 
-Scope: This license applies only to original software source code files. It does
-not apply to the MP3 audio files in static/sounds/ or any other third-party
-assets. No rights to those materials are granted by this license.
+Audio files in static/sounds/ are excluded from this license. The right to
+access or download this repository does not grant any license to reuse those
+audio files.
