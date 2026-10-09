@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Sofia钢琴</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* 基础样式 */
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      overflow: hidden;
+      position: relative;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      touch-action: none;
+    }
+
+    /* 返回主页按钮 */
+    .home-button {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      padding: 10px 20px;
+      background: rgba(255,255,255,0.9);
+      color: #333;
+      text-decoration: none;
+      border: none;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      z-index: 1002;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      white-space: nowrap;
+    }
+    .home-button:hover {
+      background: rgba(255,255,255,1);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    }
+    .home-button:active {
+      transform: translateY(0);
+    }
+
+    /* 加载指示器 */
+    #loading {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #fff;
+      font-size: 20px;
+      text-align: center;
+      z-index: 1001;
+      background: rgba(0,0,0,0.4);
+      padding: 25px 35px;
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+      max-width: 90%;
+      word-wrap: break-word;
+    }
+
+    /* 钢琴容器 */
+    .piano-container {
+      overflow-x: auto;
+      overflow-y: hidden;
+      white-space: nowrap;
+      padding: 15px;
+      z-index: 1000;
+      position: relative;
+      visibility: hidden;
+      background: rgba(255,255,255,0.1);
+      border-radius: 15px;
+      backdrop-filter: blur(15px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      max-width: 95%;
+      max-height: 90vh;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .piano-container::-webkit-scrollbar {
+      height: 8px;
+    }
+    .piano-container::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+    }
+    .piano-container::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.3);
+      border-radius: 4px;
+    }
+    .piano-container::-webkit-scrollbar-thumb:hover {
+      background: rgba(255,255,255,0.5);
+    }
+
+    .piano {
+      position: relative;
+      display: flex;
+      height: 200px;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+    }
+
+    /* 白键 */
+    .key.white {
+      position: relative;
+      flex: 0 0 auto;
+      width: 40px;
+      height: 100%;
+      border: 1px solid #ddd;
+      background: linear-gradient(to bottom, #fff, #f8f8f8);
+      margin: 0 1px;
+      border-radius: 0 0 8px 8px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      padding-bottom: 10px;
+      font-size: 11px;
+      color: #666;
+      transition: all 0.1s ease;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      touch-action: none;
+    }
+
+    /* 黑键 */
+    .key.black {
+      position: absolute;
+      width: 28px;
+      height: 120px;
+      background: linear-gradient(to bottom, #333, #000);
+      z-index: 2;
+      border-radius: 0 0 5px 5px;
+      color: #fff;
+      font-size: 9px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      padding-bottom: 5px;
+      transition: all 0.1s ease;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+      touch-action: none;
+    }
+
+    /* 按下效果 */
+    .key.active {
+      background: linear-gradient(to bottom, #4CAF50, #45a049);
+      transform: scale(0.96) translateY(2px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .key.black.active {
+      background: linear-gradient(to bottom, #FF9800, #F57C00);
+      transform: scale(0.96) translateY(2px);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+    }
+
+    /* 左右箭头按钮 */
+    .nav-arrow {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,0.25);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 45px;
+      height: 45px;
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      z-index: 1003;
+      user-select: none;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .nav-arrow:hover {
+      background: rgba(255,255,255,0.35);
+      transform: translateY(-50%) scale(1.1);
+    }
+    .nav-arrow:active {
+      background: rgba(255,255,255,0.45);
+      transform: translateY(-50%) scale(0.95);
+    }
+    #scroll-left { left: 10px; }
+    #scroll-right { right: 10px; }
+
+    /* 标题 */
+    .piano-title {
+      position: fixed;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #fff;
+      font-size: 24px;
+      font-weight: 700;
+      z-index: 1001;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      white-space: nowrap;
+    }
+
+    /* 平板和小屏幕适配 */
+    @media (max-width: 1200px) {
+      .key.white {
+        width: 32px;
+        font-size: 10px;
+      }
+      .key.black {
+        width: 22px;
+        height: 110px;
+        font-size: 8px;
+      }
+      .piano {
+        height: 180px;
+      }
+    }
+
+    /* 手机横屏 */
+    @media (max-width: 900px) and (orientation: landscape) {
+      .piano-title {
+        font-size: 20px;
+        top: 8px;
+      }
+      .home-button {
+        top: 8px;
+        right: 8px;
+        padding: 8px 16px;
+        font-size: 12px;
+      }
+      .key.white {
+        width: 28px;
+      }
+      .key.black {
+        width: 20px;
+        height: 100px;
+      }
+      .piano {
+        height: 160px;
+      }
+      .nav-arrow {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+      }
+    }
+
+    /* 手机竖屏 */
+    @media (max-width: 768px) and (orientation: portrait) {
+      .piano-title {
+        font-size: 18px;
+        top: 10px;
+      }
+      .home-button {
+        top: 10px;
+        right: 10px;
+        padding: 8px 14px;
+        font-size: 11px;
+      }
+      .key.white {
+        width: 26px;
+        font-size: 9px;
+      }
+      .key.black {
+        width: 18px;
+        height: 95px;
+        font-size: 7px;
+      }
+      .piano {
+        height: 150px;
+      }
+      .piano-container {
+        padding: 10px;
+        border-radius: 12px;
+      }
+      .nav-arrow {
+        width: 38px;
+        height: 38px;
+        font-size: 16px;
+      }
+      #loading {
+        font-size: 16px;
+        padding: 20px 25px;
+      }
+    }
+
+    /* 小手机 */
+    @media (max-width: 480px) {
+      .piano-title {
+        font-size: 16px;
+        top: 8px;
+      }
+      .home-button {
+        padding: 6px 12px;
+        font-size: 10px;
+      }
+      .key.white {
+        width: 22px;
+        font-size: 8px;
+        margin: 0 0.5px;
+      }
+      .key.black {
+        width: 16px;
+        height: 85px;
+        font-size: 6px;
+      }
+      .piano {
+        height: 130px;
+      }
+      .nav-arrow {
+        width: 35px;
+        height: 35px;
+        font-size: 14px;
+      }
+      #scroll-left { left: 5px; }
+      #scroll-right { right: 5px; }
+    }
+
+    /* 触摸优化 */
+    @media (hover: none) and (pointer: coarse) {
+      .key.white:active,
+      .key.black:active {
+        transform: scale(0.94) translateY(3px);
+      }
+      .nav-arrow:hover {
+        transform: translateY(-50%);
+        background: rgba(255,255,255,0.25);
+      }
+      .home-button:hover {
+        transform: none;
+        background: rgba(255,255,255,0.9);
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1 class="piano-title">🎹 Sofia钢琴</h1>
+  <a href="http://fjzxedu.top:5002" class="home-button">🏠 返回Sofia数智平台</a>
+  <div id="loading">🎵 加载音频文件中，请稍候...</div>
+  <button id="scroll-left" class="nav-arrow">◀</button>
+  <button id="scroll-right" class="nav-arrow">▶</button>
+  <div class="piano-container" id="piano-container">
+    <div class="piano" id="piano"></div>
+  </div>
+
+  <script>
+    // 88键列表
+    const notes = [
+      'A0','A#0','B0','C1','C#1','D1','D#1','E1','F1','F#1','G1','G#1',
+      'A1','A#1','B1','C2','C#2','D2','D#2','E2','F2','F#2','G2','G#2',
+      'A2','A#2','B2','C3','C#3','D3','D#3','E3','F3','F#3','G3','G#3',
+      'A3','A#3','B3','C4','C#4','D4','D#4','E4','F4','F#4','G4','G#4',
+      'A4','A#4','B4','C5','C#5','D5','D#5','E5','F5','F#5','G5','G#5',
+      'A5','A#5','B5','C6','C#6','D6','D#6','E6','F6','F#6','G6','G#6',
+      'A6','A#6','B6','C7','C#7','D7','D#7','E7','F7','F#7','G7','G#7',
+      'A7','A#7','B7','C8'
+    ];
+
+    // 创建键
+    function createPiano() {
+      const piano = document.getElementById('piano');
+      const blacks = [];
+      notes.forEach(note => {
+        if (!note.includes('#')) {
+          const w = document.createElement('div');
+          w.className = 'key white'; 
+          w.dataset.note = note;
+          piano.appendChild(w);
+        }
+      });
+      notes.forEach(note => {
+        if (note.includes('#')) {
+          const octave = note.slice(-1);
+          const base = note[0];
+          const whiteNote = base + octave;
+          const ref = piano.querySelector(`.key.white[data-note="${whiteNote}"]`);
+          if (ref) {
+            const b = document.createElement('div');
+            b.className = 'key black'; 
+            b.dataset.note = note;
+            piano.appendChild(b);
+            blacks.push({ blackKey: b, whiteKey: ref });
+          }
+        }
+      });
+      return blacks;
+    }
+    const blackKeysInfo = createPiano();
+
+    // Audio Context
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const audioContext = new AudioContext();
+    const audioBuffers = {};
+
+    async function preloadAudio() {
+      const loadEl = document.getElementById('loading');
+      let loaded = 0;
+      
+      for (const note of notes) {
+        const file = note.includes('#') ? note.replace('#','s')+'.mp3' : note+'.mp3';
+        try {
+          const res = await fetch(`/piano/static/sounds/${file}`);
+          if (!res.ok) throw new Error('File not found'); 
+          const arr = await res.arrayBuffer();
+          audioBuffers[note] = await audioContext.decodeAudioData(arr);
+        } catch (e) {
+          console.warn(`Failed to load ${file}:`, e);
+        }
+        loaded++;
+        loadEl.innerHTML = `🎵 加载音频文件中: ${loaded}/${notes.length}<br><small>请耐心等待...</small>`;
+      }
+      
+      loadEl.style.display='none';
+      document.getElementById('piano-container').style.visibility='visible';
+      positionBlackKeys();
+    }
+
+    function playNoteBuffered(note) {
+      const buf = audioBuffers[note];
+      if (buf) {
+        const src = audioContext.createBufferSource();
+        src.buffer = buf; 
+        src.connect(audioContext.destination);
+        src.start();
+      }
+    }
+
+    // 定位黑键
+    function positionBlackKeys() {
+      blackKeysInfo.forEach(({blackKey, whiteKey}) => {
+        const left = whiteKey.offsetLeft + whiteKey.offsetWidth - blackKey.offsetWidth/2;
+        blackKey.style.left = left+'px'; 
+        blackKey.style.top='0';
+      });
+    }
+
+    // 事件绑定
+    function bindEvents() {
+      const keys = document.querySelectorAll('.key');
+      keys.forEach(key => {
+        // 鼠标事件
+        key.addEventListener('mousedown', e=>{
+          e.preventDefault(); 
+          if(audioContext.state!=='running') audioContext.resume();
+          key.classList.add('active'); 
+          playNoteBuffered(key.dataset.note);
+        });
+        ['mouseup','mouseleave'].forEach(evt=>{
+          key.addEventListener(evt, ()=> key.classList.remove('active'));
+        });
+        
+        // 触摸事件
+        key.addEventListener('touchstart', e=>{ 
+          e.preventDefault(); 
+          if(audioContext.state!=='running') audioContext.resume(); 
+          key.classList.add('active'); 
+          playNoteBuffered(key.dataset.note); 
+        });
+        key.addEventListener('touchend', ()=> key.classList.remove('active'));
+      });
+
+      // 键盘映射
+      const keyMap = {
+        'z':'C4','s':'C#4','x':'D4','d':'D#4','c':'E4','v':'F4','g':'F#4','b':'G4','h':'G#4','n':'A4','j':'A#4','m':'B4',
+        'q':'C5','2':'C#5','w':'D5','3':'D#5','e':'E5','r':'F5','5':'F#5','t':'G5','6':'G#5','y':'A5','7':'A#5','u':'B5',
+        'i':'C6','9':'C#6','o':'D6','0':'D#6','p':'E6','[':'F6','=':'F#6',']':'G6',
+        'a':'C3','1':'C#3','s':'D3','2':'D#3','d':'E3','f':'F3','4':'F#3','g':'G3','5':'G#3','h':'A3','6':'A#3','j':'B3'
+      };
+      
+      const activeSet = new Set();
+      document.addEventListener('keydown', e=>{
+        const k=e.key.toLowerCase(); 
+        if(keyMap[k] && !activeSet.has(k)){
+          if(audioContext.state!=='running')audioContext.resume();
+          const note=keyMap[k]; 
+          const el=document.querySelector(`.key[data-note="${note}"]`);
+          if(el){ 
+            activeSet.add(k); 
+            el.classList.add('active'); 
+            playNoteBuffered(note);
+          }  
+        }
+      });
+      
+      document.addEventListener('keyup', e=>{
+        const k=e.key.toLowerCase(); 
+        if(keyMap[k]){
+          const note=keyMap[k]; 
+          const el=document.querySelector(`.key[data-note="${note}"]`);
+          if(el){ 
+            el.classList.remove('active'); 
+            activeSet.delete(k);
+          }  
+        }
+      });
+
+      // 滚动箭头
+      const container = document.getElementById('piano-container');
+      document.getElementById('scroll-left').addEventListener('click', ()=>{
+        container.scrollBy({left:-container.clientWidth/2,behavior:'smooth'});
+      });
+      document.getElementById('scroll-right').addEventListener('click', ()=>{
+        container.scrollBy({left:container.clientWidth/2,behavior:'smooth'});
+      });
+    }
+
+    // 居中显示
+    function centerKeyboard() {
+      const cont=document.getElementById('piano-container');
+      const piano=document.getElementById('piano');
+      cont.scrollLeft=(piano.scrollWidth-cont.clientWidth)/2;
+    }
+
+    // 初始化
+    async function initPiano(){
+      try {
+        await preloadAudio();
+        bindEvents();
+        positionBlackKeys();
+        centerKeyboard();
+      } catch (error) {
+        console.error('Piano initialization failed:', error);
+        document.getElementById('loading').innerHTML = '❌ 初始化失败，请刷新页面重试';
+      }
+    }
+
+    // 启动
+    window.addEventListener('load', initPiano);
+    window.addEventListener('resize', ()=>{ 
+      positionBlackKeys(); 
+      centerKeyboard(); 
+    });
+    
+    // 防止页面滚动
+    document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+  </script>
+</body>
+</html>
