@@ -1,5 +1,11 @@
 # Sofia 钢琴
 
+<!-- en-intro -->
+**Sofia Piano** — an 88-key piano simulator served locally by Flask; play with the mouse, touch or computer keyboard.
+<!-- /en-intro -->
+
+---
+
 一个使用 Flask 提供本机网页的钢琴模拟器。页面提供 88 个琴键、鼠标和触屏演奏、电脑键盘映射、音频预加载与横向滚动浏览。
 
 ## 运行环境
